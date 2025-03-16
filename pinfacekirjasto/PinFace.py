@@ -19,11 +19,11 @@ class PinFace:
         if not frmode in fmode: fmode.append(frmode)
         try:
             # Проверяем, что выбранные режимы допустимы
-            assert ffmode in ['opencv', 'adaface']
+            assert ffmode in ['opencv', 'adaface','mediapipe']
             valid_frmodes = ['sface', 'mtcnn']
             assert frmode in valid_frmodes, f"Недопустимое значение frmode: {frmode}. Ожидается одно из: {valid_frmodes}"
             for fmode_ in fmode:
-                assert fmode_ in ['opencv', 'adaface','sface', 'mtcnn'], f"Недопустимое значение fmode: {fmode_}"
+                assert fmode_ in ['opencv', 'adaface','mediapipe','sface', 'mtcnn' ], f"Недопустимое значение fmode: {fmode_}"
         except Exception as e:
             # Если возникла ошибка, выводим сообщение и завершаем программу
             s = str(e).strip()  # Преобразуем исключение в строку и убираем лишние пробелы
@@ -52,11 +52,13 @@ class PinFace:
             elif fmode_ == 'mtcnn':
                 import pinfacekirjasto.face_detection.mtcnn.align as alignadaface
                 self.alignadaface = alignadaface
-                """
+
             elif fmode_ == 'mediapipe':
+                from os import environ as osenviron
+                osenviron['TF_CPP_MIN_LOG_LEVEL'] = '2'
                 import mediapipe as mp
                 mp_face_detection = mp.solutions.face_detection
-                self.faceDetection = mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.65)
+                self.faceDetection_mediapipe = mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.65)
                 # https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/face_detection.md
                 '''
                 mp_face_detection.FaceDetection(
@@ -70,7 +72,7 @@ class PinFace:
                 min_detection_confidence=0.5
                 Минимальное значение достоверности ( [0.0, 1.0]) из модели обнаружения лиц, чтобы обнаружение считалось успешным. По умолчанию 0.5.
                 '''
-                """
+
 
             # Импортируем необходимые модули в зависимости от выбранного режима распознавания лиц
             elif fmode_ == 'sface':
@@ -149,8 +151,6 @@ class PinFace:
             else:
                 cvframe = frame
 
-
-
             bboxes, _, scores = self.OpenCv.detectMultiScale3(cvframe)
             facescv, faces = [], []
             for nbboxes_, bboxes_ in enumerate(bboxes):
@@ -160,6 +160,42 @@ class PinFace:
                 facescv.append(img_bgr)  # Добавляем изображение лица в формате OpenCV
                 faces.append(Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)))  # Конвертируем в PIL Image
                 bboxes[nbboxes_] = (x, y, x + w, y + h)  # Обновляем координаты ограничивающего прямоугольника
+
+        elif ffmode == 'mediapipe':
+            if  isinstance(frame, Image.Image):
+                cvframe = cv2.cvtColor(np.array(frame), cv2.COLOR_BGR2RGB)
+            else:
+                cvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = self.faceDetection_mediapipe.process(cvframe)
+
+            if not (results.detections):
+                self.timeff = round((time() - self.timeff) * 1000)  # Вычисляем время выполнения
+                return [], [], []  # Возвращаем результаты
+
+            he, wi, c = frame.shape
+            bboxes = []
+            facescv, faces = [], []
+            for id, detection in enumerate(results.detections):
+                data = detection.location_data.relative_bounding_box
+
+                x = abs(int(data.xmin*wi))
+                y = abs(int(data.ymin*he))
+                w = abs(int(data.width*wi))
+                h = abs(int(data.height*he))
+
+                #img_grb = cvframe[y:y + h, x:x + w]  # Вырезаем область лица
+                #img_grb = SqrReize(cvframe, x-20, y-20, x+w + 20, y + h + 20, square_size_fix = 112)
+
+                #маштабирование
+                img_grb = SqrReize(cvframe, x, y, x+w, y + h, square_size_fix = 140)
+                img_grb = img_grb[4:116,14:126 ]
+
+                #img_grb = cv2.resize(img_grb, (112, 112), interpolation=cv2.INTER_AREA)  # Изменяем размер
+
+                #facescv.append(cv2.cvtColor(img_grb, cv2.COLOR_RGB2BGR))  # Добавляем изображение лица в формате OpenCV
+                #faces.append(Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)))  # Конвертируем в PIL Image
+                faces.append(Image.fromarray(img_grb))  # Конвертируем в PIL Image
+                bboxes.append([x, y, x + w, y + h])
 
         self.timeff = round((time() - self.timeff) * 1000)  # Вычисляем время выполнения
         return bboxes, faces, facescv  # Возвращаем результаты
@@ -192,10 +228,12 @@ class PinFace:
         if frmode == 'sface':
             # Распознавание лиц с использованием SFace
             for nfaces_, faces_ in enumerate(faces):
-                if len(facescv) == 0:
-                    facescv_ = cv2.cvtColor(np.array(faces_), cv2.COLOR_RGB2BGR)  # Конвертируем в BGR, если facescv пуст
-                else:
+                if len(facescv) != 0:
                     facescv_ = facescv[nfaces_]
+                else:
+                    facescv_ = cv2.cvtColor(np.array(faces_), cv2.COLOR_RGB2BGR)  # Конвертируем в BGR, если facescv пуст
+
+                cv2.imwrite('#.jpg', facescv_)
 
                 embedding = self.modelSface.recognizer_(facescv_)  # Получаем эмбеддинг
                 embeddings.append(embedding)
@@ -210,3 +248,46 @@ class PinFace:
 
         self.timefr = round((time() - self.timefr) * 1000)  # Вычисляем время выполнения
         return embeddings  # Возвращаем результаты
+
+
+
+def SqrReize(frame, left, top, right, bottom, square_size_fix = 300):
+
+    if (right-left) % 2 == 1: left =left - 1
+    if (bottom-top) % 2 == 1: top  =top  - 1
+
+    # Вычисляем центр области
+    center_y = (top + bottom) // 2
+    center_x = (left + right) // 2
+
+    # Размер квадрата (до масштабирования)
+    square_size = max(bottom - top, right - left)  # Размер квадрата равен максимальной стороне
+
+    # Вычисляем координаты для квадрата
+    start_y = center_y - square_size // 2 - 30
+    end_y = center_y + square_size // 2 + 30
+    start_x = center_x - square_size // 2 - 30
+    end_x = center_x + square_size // 2 + 30
+
+    # Проверяем, выходит ли квадрат за пределы кадра
+    pad_top = max(0, -start_y)
+    pad_bottom = max(0, end_y - frame.shape[0])
+    pad_left = max(0, -start_x)
+    pad_right = max(0, end_x - frame.shape[1])
+
+    # Обрезаем кадр до квадрата (с учётом выхода за пределы)
+    start_y = max(0, start_y)
+    end_y = min(frame.shape[0], end_y)
+    start_x = max(0, start_x)
+    end_x = min(frame.shape[1], end_x)
+
+    frame2 = frame[start_y:end_y, start_x:end_x]
+
+    # Добавляем padding, если квадрат выходит за пределы кадра
+    if pad_top > 0 or pad_bottom > 0 or pad_left > 0 or pad_right > 0:
+        frame2 = np.pad(frame2, ((pad_top, pad_bottom), (pad_left, pad_right), (0, 0)), mode='constant')
+
+    # Масштабируем квадрат до 300x300
+    frame2_resized = cv2.resize(frame2, (square_size_fix, square_size_fix))
+    del frame2
+    return frame2_resized

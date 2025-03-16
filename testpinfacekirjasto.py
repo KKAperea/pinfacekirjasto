@@ -11,13 +11,18 @@ if __name__ == "__main__":
 # Альтернативные варианты инициализации закомментированы ниже
 
     # pFace = PinFace(ffmode='opencv', frmode='sface')  # Альтернативный вариант инициализации
-    pFace = PinFace(ffmode='adaface', frmode='sface', fmode =['opencv', 'mtcnn'] )
+
+    #pFace = PinFace(ffmode='mediapipe', frmode='sface', fmode =['adaface', 'opencv', 'mtcnn'] )
+    pFace = PinFace(ffmode='mediapipe', frmode='sface', fmode =[] )
+
+
+
     # pFace = PinFace(ffmode='adaface', frmode='adaface')
     # pFace = PinFace(ffmode='opencv', frmode='adaface')
 
     # Загружаем изображение для обработки с использованием OpenCV
     # Функция cv2.imread загружает изображение из файла в формате BGR
-    frame = cv2.imread("pinfacekirjasto/kk.jpg")
+    frame = cv2.imread("pinfacekirjasto/kkk.jpg")
 
     if frame is None:
         print("Ошибка: изображение не загружено. Проверьте путь к файлу.")
