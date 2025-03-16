@@ -153,7 +153,8 @@ def ReadFrame(frame, modelayer=0, timeframe=None):
         cv2.waitKey(1)
 
         # Вывод информации в консоль
-        print(f' {i:>4} | {tf:>4} {tr:>4} {ts:>4} {tb:>4} |', right - left, bottom - top, '|', f'{percent:3.1f} {percent2:3.1f} {min(ev_data, distance_first):.2f} {ev_data2:.2f} | {percentage_fcbline(ev_data2) * 100:.2f} {additional_data} {unknown_distance if unknown_distance > 0.5 else ""} {"New face" if New_face else ""}')
+        print(f' {i:>4} | {tf:>4} {tr:>4} {ts:>4} {tb:>4} |', right - left, bottom - top, '|',
+              f'{f"{percent:3.1f}":>5} {f"{percent2:3.1f}":>5} {f"{min(ev_data, distance_first):.2f}":>5} {f"{ev_data2:.2f}":>5} | {percentage_fcbline(ev_data2) * 100:.2f} {additional_data} {unknown_distance if unknown_distance > 0.5 else ""} {"New face" if New_face else ""}')
         timedalaytitle = time()
 
     else:  # Если лица не обнаружены
