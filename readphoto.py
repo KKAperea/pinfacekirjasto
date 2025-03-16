@@ -15,8 +15,11 @@ import face_data
 #sqlitelock = threading.Lock()  # Блокировка для работы с базой данных в многопоточной среде
 from time import time
 
-ffmode == 'adaface'
-frmode=['sface','adaface']
+# 'opencv', 'adaface'
+ffmode = 'adaface'
+# 'sface', 'mtcnn'
+frmode='sface'
+fmode = ['mtcnn']
 '''
 if ffmode == 'AdaFace':
     from face_alignment import align
@@ -31,7 +34,7 @@ elif ffmode == 'opencv':
 '''
 
 from pinfacekirjasto.PinFace import PinFace
-pFace = PinFace(ffmode=ffmode, frmode=frmode)
+pFace = PinFace(ffmode=ffmode, frmode=frmode, fmode=fmode)
 
 
 
@@ -89,11 +92,11 @@ for nimage_path, image_path in enumerate(glob_, start= 1):
         embeddings128 = None
         embeddings512 = None
         # Обрабатываем каждый режим
-        for mode in ([frmode] if isinstance(frmode, str) else frmode):
+        for mode in fmode:
             if mode == 'sface':
                 embeddings128 = pFace.face_recognition(faces=faces, facescv=facescv, frmode='sface')[0][0]
-            elif mode == 'adaface':
-                embeddings512 = pFace.face_recognition(faces=faces, facescv=facescv, frmode='adaface')[0]
+            elif mode == 'mtcnn':
+                embeddings512 = pFace.face_recognition(faces=faces, facescv=facescv, frmode='mtcnn')[0]
 
 
         namepercone = ospathsplitext(image_file)[0]
@@ -120,7 +123,7 @@ for nimage_path, image_path in enumerate(glob_, start= 1):
         face_data.add_face_to_db(namefile=image_file, filesize=file_size, namepercone=namepercone, vector128 = embeddings128, vector512 = embeddings512,  photo=faces[0])
         countAddRec +=1
         shutilmove(image_path, pathinput + '/ok/')
-        print(f'[x] {nimage_path:>3}/{glob_len:>3}.) {tf}-{te}        Добавлен : {image_file} -> {namepercone}')
+        print(f'[x] {nimage_path:>3}/{glob_len:>3}.) {tf:>4}-{te:>4}        Добавлен : {image_file} -> {namepercone}')
 
 if countAddRec ==0:
     print(f'[i] Записи не добавлялись')
