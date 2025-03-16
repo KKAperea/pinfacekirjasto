@@ -50,6 +50,7 @@
 
 ```bash
 pip install opencv-python numpy
+```
 
 ## Настройка конфигурации
 
@@ -63,6 +64,7 @@ pip install opencv-python numpy
 
 ```bash
 python runme.py
+```
 
 Программа начнет обработку видеопотока и отобразит результаты в окне **OpenCV**.
 
