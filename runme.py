@@ -16,7 +16,7 @@ pFace = PinFace(ffmode=ffmode, frmode=frmode,fmode =[])
 '''
 
 # Импортируем дополнительные модули
-from runmelib import dt, percentage_fcbline, percentage_fcb, DrawInfo, SqrReize  # Вспомогательные функции
+from runmelib import dt, percentage_fcbline, percentage_fcb, DrawInfo, SqrReize,facessavejpeg, appendTXT # Вспомогательные функции
 from time import time, sleep  # Модуль для работы со временем
 from camstream import VideoCapture, VideoFileReader  # Модуль для работы с видеопотоком
 import face_data  # Модуль для работы с базой данных лиц
@@ -32,7 +32,7 @@ from config import (
 
 # Глобальные переменные
 timedalaytitle = 0  # Время последнего обновления заголовка окна
-prior_additional_data = ''  # Предыдущие дополнительные данные
+prior_additional_data = '-=!@#$%^&*()=-'  # Предыдущие дополнительные данные
 prior_unknown_vector = np.ones((1, vector_size), dtype=np.float32)  # Вектор для неизвестных лиц
 
 
@@ -90,19 +90,23 @@ def ReadFrame(frame, modelayer=0, timeframe=None):
                          for item in sorted_data[:3] if item["distance"] < (1.1 if ffmode == 'AdaFace' else 1.05)]
 
             if len(top_three) == 0:  # Если лицо не распознано
-                all_Ok = False
-                additional_data: str = 'X/Z'
-                percent, percent2 = 0, 0
-                ev_data, ev_data2 = 2, 2
-
                 # Сохраняем неизвестное лицо
                 unknown_distance = np.linalg.norm(prior_unknown_vector - embedding)
                 if unknown_distance > 0.5:
-                    faces_.save('unknown/' + timeframe + '_' + str(nfaces_ + 1) + '.jpeg', "JPEG", quality=100)
+                    namefile = 'output/' + dt.now().strftime('%Y%m%d') + '_unknown/' + timeframe + '_' + str(nfaces_ + 1) + '.jpeg'
+                    #faces_.save(namefile, "JPEG", quality=100)
+                    facessavejpeg(faces_, namefile)
                     prior_unknown_vector = embedding
                     New_face = True
                 else:
                     New_face = False
+
+                all_Ok = False
+                additional_data: str = 'X/Z'
+                percent, percent2 = 0, 0
+                ev_data, ev_data2 = 2, 2
+                distance_first = unknown_distance
+                ev_data_unknown = unknown_distance*unknown_distance
                 avatara = None
             else:  # Если лицо распознано
                 all_Ok = True
@@ -121,8 +125,15 @@ def ReadFrame(frame, modelayer=0, timeframe=None):
 
                 # Сохраняем распознанное лицо
                 if prior_additional_data != additional_data:
-                    namefile = 'known/' + timeframe + '-' + additional_data.replace(' ', '_') + '.jpeg'
-                    faces_.save(namefile, "JPEG", quality=100)
+                    namefile = namefile = 'output/' + dt.now().strftime('%Y%m%d') + '_known/' + timeframe + '-' + additional_data.replace(' ', '_') + '.jpeg'
+                    #faces_.save(namefile, "JPEG", quality=100)
+                    facessavejpeg(faces_, namefile)
+                    '''
+                    from os.path import isfile as ospathisfile
+                    namefile = 'known/' + additional_data.replace(' ', '_') + 'm.jpeg'
+                    if not ospathisfile(namefile):
+                        faces_.save(namefile, "JPEG", quality=100)
+                    '''
                     prior_additional_data = additional_data
                     New_face = True
                 else:
@@ -153,8 +164,15 @@ def ReadFrame(frame, modelayer=0, timeframe=None):
         cv2.waitKey(1)
 
         # Вывод информации в консоль
+        percentage_fcbline1 = f'{percentage_fcbline(ev_data2) * 100:.2f}'.rjust(6)
+        if not all_Ok:
+            percentage_fcbline2 = f'{percentage_fcbline(ev_data_unknown) * 100:.2f}'.rjust(6)
+
         print(f' {i:>4} | {tf:>4} {tr:>4} {ts:>4} {tb:>4} |', right - left, bottom - top, '|',
-              f'{f"{percent:3.1f}":>5} {f"{percent2:3.1f}":>5} {f"{min(ev_data, distance_first):.2f}":>5} {f"{ev_data2:.2f}":>5} | {percentage_fcbline(ev_data2) * 100:.2f} {additional_data} {unknown_distance if unknown_distance > 0.5 else ""} {"New face" if New_face else ""}')
+              f'{f"{percent:3.1f}":>5} {f"{percent2:3.1f}":>5} {f"{min(ev_data, distance_first):.2f}":>5} {f"{ev_data2:.2f}":>5} | {percentage_fcbline1} {percentage_fcbline2 if not all_Ok else "      "} | {additional_data} {"New face" if New_face else ""}')
+
+        appendTXT('output/' + dt.now().strftime('%Y%m%d')+'.txt',
+                  f'{i:>5}|{timeframe:>22}|{percentage_fcbline1}|{"New face" if New_face else "        "}|{percentage_fcbline2 if not all_Ok else "      "}|{additional_data}\n')
         timedalaytitle = time()
 
     else:  # Если лица не обнаружены
@@ -163,6 +181,9 @@ def ReadFrame(frame, modelayer=0, timeframe=None):
         if 3 < time_diff < 10:
             img_tekstura_ = DrawInfo(img_tekstura.copy(), additional_data='', is_Real=None, all_Ok=True)
             cv2.imshow(FRAME_NAME, img_tekstura_)
+        if 10 < time_diff < 15:
+            prior_additional_data = '-=!@#$%^&*()=-'
+            prior_unknown_vector  = np.ones((1, vector_size), dtype=np.float32)  # Вектор для неизвестных лиц
         pass
     return
 

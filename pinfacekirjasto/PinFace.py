@@ -187,8 +187,11 @@ class PinFace:
                 #img_grb = SqrReize(cvframe, x-20, y-20, x+w + 20, y + h + 20, square_size_fix = 112)
 
                 #маштабирование
-                img_grb = SqrReize(cvframe, x, y, x+w, y + h, square_size_fix = 140)
-                img_grb = img_grb[4:116,14:126 ]
+                #img_grb = SqrReize(cvframe, x, y, x+w, y + h, square_size_fix = 140)
+                #img_grb = img_grb[4:116,14:126 ]
+
+                img_grb = SqrReize(cvframe, x, y, x+w, y + h, square_size_fix = 130)
+                img_grb = img_grb[2:114,9:121]
 
                 #img_grb = cv2.resize(img_grb, (112, 112), interpolation=cv2.INTER_AREA)  # Изменяем размер
 

@@ -350,3 +350,26 @@ def SqrReize(frame, left, top, right, bottom, square_size_fix = 300):
     frame2_resized = cv2.resize(frame2, (square_size_fix, square_size_fix))
     del frame2
     return frame2_resized
+
+def facessavejpeg(faces_, namefile):
+    try:
+        faces_.save(namefile, "JPEG", quality=100)
+    except:
+        # Путь к файлу
+        from pathlib import Path
+        file_path = Path(namefile)
+        # Создание всех недостающих каталогов
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        # Создание файла
+        try:
+            faces_.save(namefile, "JPEG", quality=100)
+        except:
+            print('[!] Не могу создать файл ' +namefile)
+
+
+def appendTXT(namefile, text):
+    with open(namefile, "a+", encoding = "windows-1251", errors='ignore') as fileA:
+        try:
+            fileA.write(text)
+        except:
+            pass
