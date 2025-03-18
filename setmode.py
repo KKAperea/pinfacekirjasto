@@ -5,17 +5,15 @@ frmode: Режим для распознавания лиц (Facial Recognition 
 antispoofingmode: Режим антиспуфинга (проверка на подделку лица)
 
        Параметры:
-        - ffmode: Режим обнаружения лиц. Может быть или/и 'opencv', 'adaface'
-        - frmode: Режим распознавания лиц. Может быть 'sface' или/и 'mtcnn'.
+        - ffmode: Режим обнаружения лиц. Может быть 'opencv', 'mtcnn','mediapipe'
+        - frmode: Режим распознавания лиц. Может быть 'sface', 'adaface'
 '''
 #ffmode = 'mediapipe'  # Режим извлечения признаков лица (по умолчанию 'opencv')
-#ffmode = 'adaface'  # Режим извлечения признаков лица (по умолчанию 'opencv')
+#ffmode = 'mtcnn'  # Режим извлечения признаков лица (по умолчанию 'opencv')
 ffmode = 'opencv'  # Режим извлечения признаков лица (по умолчанию 'opencv')
-# 'adaface'
-# 'mediapipe'
 
 frmode = 'sface'  # Режим распознавания лиц (по умолчанию 'sface')
-#frmode = 'mtcnn'
+#frmode = 'adaface'
 
 antispoofingmode = False  # Отключение антиспуфинга по умолчанию
 

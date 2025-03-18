@@ -12,15 +12,15 @@ class PinFace:
         Инициализация класса PinFace.
 
         Параметры:
-        - ffmode: Режим обнаружения лиц. Может быть или/и 'opencv', 'adaface'
-        - frmode: Режим распознавания лиц. Может быть 'sface' или/и 'mtcnn'.
+        - ffmode: Режим обнаружения лиц. Может быть 'opencv', 'mtcnn','mediapipe'
+        - frmode: Режим распознавания лиц. Может быть 'sface', 'adaface'
         """
         if not ffmode in fmode: fmode.append(ffmode)
         if not frmode in fmode: fmode.append(frmode)
         try:
             # Проверяем, что выбранные режимы допустимы
-            assert ffmode in ['opencv', 'adaface','mediapipe']
-            valid_frmodes = ['sface', 'mtcnn']
+            assert ffmode in ['opencv', 'mtcnn','mediapipe']
+            valid_frmodes = ['sface', 'adaface']
             assert frmode in valid_frmodes, f"Недопустимое значение frmode: {frmode}. Ожидается одно из: {valid_frmodes}"
             for fmode_ in fmode:
                 assert fmode_ in ['opencv', 'adaface','mediapipe','sface', 'mtcnn' ], f"Недопустимое значение fmode: {fmode_}"
@@ -50,8 +50,8 @@ class PinFace:
                 import pinfacekirjasto.face_detection.opencv.OpenCv as OpenCv
                 self.OpenCv = OpenCv
             elif fmode_ == 'mtcnn':
-                import pinfacekirjasto.face_detection.mtcnn.align as alignadaface
-                self.alignadaface = alignadaface
+                import pinfacekirjasto.face_detection.mtcnn.align as alignmtcnn
+                self.alignmtcnn = alignmtcnn
 
             elif fmode_ == 'mediapipe':
                 from os import environ as osenviron
@@ -138,9 +138,9 @@ class PinFace:
 
 
 
-        if ffmode == 'adaface':
-            # Обнаружение лиц с использованием AdaFace
-            bboxes, faces = self.alignadaface.get_aligned_faces(frame)
+        if ffmode == 'mtcnn':
+            # Обнаружение лиц с использованием mtcnn
+            bboxes, faces = self.alignmtcnn.get_aligned_faces(frame)
             self.timeff = round((time() - self.timeff) * 1000)  # Вычисляем время выполнения
             return bboxes, faces, []  # Возвращаем результаты
 
@@ -236,12 +236,12 @@ class PinFace:
                 else:
                     facescv_ = cv2.cvtColor(np.array(faces_), cv2.COLOR_RGB2BGR)  # Конвертируем в BGR, если facescv пуст
 
-                cv2.imwrite('#.jpg', facescv_)
+                #cv2.imwrite('#.jpg', facescv_)
 
                 embedding = self.modelSface.recognizer_(facescv_)  # Получаем эмбеддинг
                 embeddings.append(embedding)
 
-        elif frmode == 'mtcnn':
+        elif frmode == 'adaface':
             # Распознавание лиц с использованием AdaFace
             for nfaces_, faces_ in enumerate(faces):
                 bgr_tensor_input = self.inference.to_input(faces_)  # Подготавливаем входные данные

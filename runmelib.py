@@ -1,6 +1,7 @@
 import cv2
 from cv2 import numpy as np
 from datetime import datetime as dt
+import numpy as np
 
 
 
@@ -212,7 +213,7 @@ def find_nearest_space(text):
         else:
             return right_space
 
-def DrawInfo(frame, additional_data: str = "Дополнительные данные", sys_info: str = '', is_Real: bool = True, all_Ok: bool = True):
+def DrawInfo(frame, additional_data: str = "Дополнительные данные", sys_info: str = '', is_real: bool = True, all_Ok: bool = True, onlytime = False):
     """
     Добавляет информацию на изображение (frame), включая дату, время, системную информацию и статусы.
 
@@ -220,7 +221,7 @@ def DrawInfo(frame, additional_data: str = "Дополнительные дан�
     - frame: Изображение (numpy.ndarray), на которое будет добавлена информация.
     - additional_data: Дополнительные данные (по умолчанию "Дополнительные данные").
     - sys_info: Системная информация (по умолчанию пустая строка).
-    - is_Real: Флаг, указывающий на реальность данных (по умолчанию True).
+    - is_real: Флаг, указывающий на реальность данных (по умолчанию True).
     - all_Ok: Флаг, указывающий на успешность операции (по умолчанию True).
 
     Возвращает:
@@ -245,33 +246,45 @@ def DrawInfo(frame, additional_data: str = "Дополнительные дан�
     cv2putText(frame, current_text=current_time, alignment='right', indent=15, bottom=50,
                font=font, font_scale=font_scale, color=(128, 128, 128), thickness=thickness)
 
-    # Добавляем информацию о статусе is_Real (реальность данных)
-    if is_Real is not None:  # Проверяем, что is_Real не равно None
-        if not is_Real:
-            # Если is_Real равно False, добавляем текст "False" красного цвета
-            cv2putText(frame, current_text='False', alignment='center', indent =0, bottom=500, color=(0, 0, 255))
+    if onlytime:
+        # Возвращаем изображение с добавленной информацией
+        return frame
+
+
+    # Добавляем информацию о статусе is_real (реальность данных)
+    if is_real is not None:  # Проверяем, что is_real не равно None
+        if not is_real:
+            # Если is_real равно False, добавляем текст "False" красного цвета
+            cv2putText(frame, current_text='False', alignment='center', indent =0, bottom=500+30, color=(0, 0, 255))
             # Создаем копию изображения для наложения полупрозрачной рамки
             overlay = frame.copy()
             # Рисуем полупрозрачный прямоугольник
             #cv2.rectangle(overlay, top_left, bottom_right, box_color, -1)  # -1 означает заливку
-            cv2.rectangle(overlay, (frame.shape[1] // 2 - 120, 470), (frame.shape[1] // 2 + 120, 510), (0,0,255), -1)  # -1 означает заливку
+            cv2.rectangle(overlay, (frame.shape[1] // 2 - 120, 470+30), (frame.shape[1] // 2 + 120, 510+30), (0,0,255), -1)  # -1 означает заливку
             #cv2.rectangle(overlay, (10,40), (30,50), (0,0,255), -1)  # -1 означает заливку
             # Наложение рамки на изображение с учетом прозрачности
             box_alpha = 0.3
             cv2.addWeighted(overlay, box_alpha, frame, 1 - box_alpha, 0, frame)
         else:
-            # Если is_Real равно True, добавляем текст "True" зеленого цвета
-            cv2putText(frame, current_text='True', alignment='center', indent = 0, bottom=500, color=(0, 255, 0))
-
+            # Если is_real равно True, добавляем текст "True" зеленого цвета
+            cv2putText(frame, current_text='True', alignment='center', indent = 0, bottom=500+30, color=(0, 255, 0))
+    '''
     # Добавляем информацию о статусе all_Ok (успешность операции)
     if not all_Ok:
         # Если all_Ok равно False, добавляем текст "Not Found" красного цвета
-        cv2putText(frame, current_text='Not Found', alignment='center', indent = 0, bottom=550, color=(0, 0, 255))
+        cv2putText(frame, current_text='Not Found', alignment='center', indent = 0, bottom=590, color=(0, 0, 255))'
+    '''
 
     # Добавляем системную информацию, если она не пустая
     if sys_info != '':
-        cv2putText(frame, current_text=sys_info, alignment='center', indent = 0, bottom=780,
-                   font=font, font_scale=font_scale - 0.3, color=(128, 128, 128), thickness=thickness)
+        cv2putText(frame, current_text=sys_info,
+                   alignment= fcc_data['texts']['sysinfo']['alignment'],
+                   indent = fcc_data['texts']['sysinfo']['horizontalindent'],
+                   bottom=fcc_data['texts']['sysinfo']['verticalindent'],
+                   font=font,
+                   font_scale=font_scale - 0.2,
+                   color=(128, 128, 128),
+                   thickness=thickness)
 
     # rus ---------------------------------------------------------------------------
     # Преобразуем изображение из OpenCV в Pillow
@@ -283,6 +296,11 @@ def DrawInfo(frame, additional_data: str = "Дополнительные дан�
     font_path = "arial.ttf"  # Пример: шрифт Arial
     font_size = 30
     color = (255, 255, 255)  # Цвет текста (белый)
+
+    if not all_Ok:
+        additional_data = fcc_data['unknown']['text']
+        color = (255)  # Цвет текста (Красный)
+        font_size = font_size + 18
 
     # Добавляем дополнительные данные, если они не пустые
     if additional_data != '':
@@ -298,7 +316,7 @@ def DrawInfo(frame, additional_data: str = "Дополнительные дан�
 
             # Добавляем первую часть текста
             image2putText(draw=draw, current_text=additional_data1, alignment='center', indent=0,
-                          bottom=610, font_path=font_path, font_size=font_size, color=color)
+                          bottom=590, font_path=font_path, font_size=font_size, color=color)
             # Добавляем вторую часть текста
             image2putText(draw=draw, current_text=additional_data2, alignment='center', indent=0,
                           bottom=650, font_path=font_path, font_size=font_size, color=color)
@@ -352,8 +370,21 @@ def SqrReize(frame, left, top, right, bottom, square_size_fix = 300):
     return frame2_resized
 
 def facessavejpeg(faces_, namefile):
+    if faces_ is None:
+        print('[!] Пустой формат')
+        return
+
     try:
-        faces_.save(namefile, "JPEG", quality=100)
+        if isinstance(faces_, Image.Image):
+            #print('Image.Image')
+            faces_.save(namefile, "JPEG", quality=100)
+        elif isinstance(faces_, np.ndarray):
+            #print('np.ndarray')
+            cv2.imwrite('namefile', faces_)
+        else:
+            print('[!] Неизвестный формат')
+            return
+
     except:
         # Путь к файлу
         from pathlib import Path
@@ -362,9 +393,12 @@ def facessavejpeg(faces_, namefile):
         file_path.parent.mkdir(parents=True, exist_ok=True)
         # Создание файла
         try:
-            faces_.save(namefile, "JPEG", quality=100)
+            if isinstance(faces_, Image.Image):
+                faces_.save(namefile, "JPEG", quality=100)
+            elif isinstance(faces_, np.ndarray):
+                cv2.imwrite(namefile, faces_)
         except:
-            print('[!] Не могу создать файл ' +namefile)
+            print('[!] Не могу создать файл ' +namefile,  str(type(faces_)))
 
 
 def appendTXT(namefile, text):
@@ -373,3 +407,119 @@ def appendTXT(namefile, text):
             fileA.write(text)
         except:
             pass
+
+# --------------------
+# Чтение конфигурации
+
+import json
+
+# Загрузка данных из JSON-файла
+fcc_data = {}
+try:
+    with open('config.json', 'r', encoding='utf-8') as fcc_file:
+        fcc_data = json.load(fcc_file)
+except FileNotFoundError:
+    # Если файл не найден, создаем пустой словарь
+    fcc_data = {}
+
+# Флаг для отслеживания изменений
+rewritejsonfile = False
+
+# Инициализация структуры данных, если она отсутствует
+if 'texts' not in fcc_data:
+    fcc_data['texts'] = {}
+    rewritejsonfile = True
+
+# Данные для добавления в раздел 'texts'
+texts_data = {
+    'date': {
+        "desc": "Дата",
+        "variable": "{today}",
+        "alignment": "left",
+        "horizontalindent": 10,
+        "verticalindent": 30
+    },
+    'time': {
+        "desc": "Время",
+        "variable": "{now}",
+        "alignment": "right",
+        "horizontalindent": 10,
+        "verticalindent": 30
+    },
+    'fake': {
+        "desc": "Фейк",
+        "alignment": "center",
+        "horizontalindent": 0,
+        "verticalindent": 60
+    },
+    'data': {
+        "desc": "Данные",
+        "alignment": "center",
+        "horizontalindent": 0,
+        "verticalindent": 360
+    },
+    'data2': {
+        "desc": "Данные 2 строка",
+        "alignment": "center",
+        "horizontalindent": 0,
+        "verticalindent": 400
+    },
+    'sysinfo': {
+        "desc": "Подвал - системная информация",
+        "alignment": "center",
+        "horizontalindent": 0,
+        "verticalindent": 820
+    }
+}
+
+# Добавление данных в раздел 'texts', если они отсутствуют
+for key, value in texts_data.items():
+    if key not in fcc_data['texts']:
+        fcc_data['texts'][key] = value
+        rewritejsonfile = True
+
+# Добавление других разделов, если они отсутствуют
+additional_data = {
+    'unknown': {
+        "text": "Лицо неизвестно",
+        "font": "FONT_HERSHEY_SIMPLEX",
+        "font_scale": 1.0,
+        "color": [255, 0, 0],
+        "thickness": 2
+    },
+    'mainpicture': {
+        "size": 360,
+        "alignment": "center",
+        "horizontalindent": 0,
+        "verticalindent": 120
+    },
+    'fonpicture': {
+        "file": "tekstura848480.jpg",
+        "width": 480,
+        "height": 848
+    }
+}
+
+for key, value in additional_data.items():
+    if key not in fcc_data:
+        fcc_data[key] = value
+        rewritejsonfile = True
+
+# Сохранение обновленных данных обратно в файл, если были изменения
+if rewritejsonfile:
+    with open('config.json', 'w', encoding='utf-8') as fcc_file:
+        json.dump(fcc_data, fcc_file, indent=4, ensure_ascii=False)
+del rewritejsonfile, additional_data
+del key, value
+
+#y, x, _ = img_tekstura_.shape
+y, x = fcc_data['fonpicture']['height'], fcc_data['fonpicture']['width']
+
+if fcc_data['mainpicture']['alignment'] == 'center':
+    fcc_data['mainpicture']['x1']  = (x - fcc_data['mainpicture']['size']) // 2 + fcc_data['mainpicture']['horizontalindent']
+elif fcc_data['mainpicture']['alignment'] == 'right':
+    fcc_data['mainpicture']['x1']  = (x - fcc_data['mainpicture']['size']) - fcc_data['mainpicture']['horizontalindent']
+elif fcc_data['mainpicture']['alignment'] == 'left':
+    fcc_data['mainpicture']['x1']  = fcc_data['mainpicture']['horizontalindent']
+else:
+    fcc_data['mainpicture']['x1']  = fcc_data['mainpicture']['horizontalindent']

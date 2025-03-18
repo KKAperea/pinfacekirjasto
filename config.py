@@ -21,9 +21,19 @@ CamConfig3 = {
     "desc" : "Настольная камера"
 }
 
+
+CamLocal = {
+    "stream_to_parse" : 0,
+    "name": "cam03",
+    "resize" : 1,
+    "timedelay" : 1000,
+    "extraqueue" : 0,
+    "desc" : "Настольная камера"
+}
+
+
 # Выбор активной конфигурации камеры
-#CamConfig = CamConfig3
-CamConfig = CamConfig3
+CamConfig = CamLocal
 
 
 # Импорт необходимых функций из модуля os

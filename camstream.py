@@ -301,11 +301,16 @@ class VideoCapture:
         Метод для остановки видеозахвата и освобождения ресурсов.
         """
         self.stopped = True
-        if self.thread.is_alive():
-            try:
-                self.thread.join()
-            except:
-                pass
+        try:
+            if self.thread.is_alive():
+                try:
+                    self.thread.join()
+                except:
+                    pass
+        except:
+            print('[!] Не был запущен видеопоток ')
+            exit(0)
+
 
         self.cap.release()
 
